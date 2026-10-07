@@ -1,0 +1,8 @@
+set default-list
+
+# write build/<hostname>.img for a pi 4 or pi 5, the hostname must be in ansible/inventory.ini
+image hostname:
+    ./make-image.sh {{ hostname }}
+
+clean:
+    rm -rf build

@@ -1,0 +1,69 @@
+name: Sync Tailscale ACLs
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  # a pr can rewrite this workflow, so its identity may only read and validate the policy
+  test:
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      # the tailscale action requests a jwt from github
+      id-token: write
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Fetch version-cache.json
+        uses: actions/cache@v5
+        with:
+          path: ./version-cache.json
+          key: version-cache.json-${{ github.run_id }}
+          restore-keys: |
+            version-cache.json-
+
+      - name: Test ACL
+        id: test-acl
+        uses: tailscale/gitops-acl-action@v1
+        with:
+          oauth-client-id: ${{ vars.TS_TEST_OAUTH_ID }}
+          audience: ${{ vars.TS_TEST_AUDIENCE }}
+          tailnet: cornellev.org.github
+          policy-file: tailscale/policy.hujson
+          action: test
+
+  # the tailscale-apply environment only deploys from main and holds the identity that can write
+  apply:
+    if: github.event_name == 'push'
+    environment: tailscale-apply
+    permissions:
+      contents: read
+      # the tailscale action requests a jwt from github
+      id-token: write
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Fetch version-cache.json
+        uses: actions/cache@v5
+        with:
+          path: ./version-cache.json
+          key: version-cache.json-${{ github.run_id }}
+          restore-keys: |
+            version-cache.json-
+
+      - name: Deploy ACL
+        id: deploy-acl
+        uses: tailscale/gitops-acl-action@v1
+        with:
+          oauth-client-id: ${{ vars.TS_OAUTH_ID }}
+          audience: ${{ vars.TS_AUDIENCE }}
+          tailnet: cornellev.org.github
+          policy-file: tailscale/policy.hujson
+          action: apply

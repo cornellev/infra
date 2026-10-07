@@ -1,0 +1,71 @@
+{
+    "groups": {
+        // the current it lead, update at handoff
+        "group:it": ["erics118@github"],
+    },
+
+    "grants": [
+        // members reach their own devices, every tagged device, and exit nodes
+        {
+            "src": ["autogroup:member"],
+            "dst": ["autogroup:self", "autogroup:tagged", "autogroup:internet"],
+            "ip":  ["*"],
+        },
+        // tagged devices reach each other and exit nodes, never members' devices
+        {
+            "src": ["autogroup:tagged"],
+            "dst": ["autogroup:tagged", "autogroup:internet"],
+            "ip":  ["*"],
+        },
+    ],
+
+    "ssh": [
+        // members ssh into their own devices and every tagged device
+        {
+            "src":    ["autogroup:member"],
+            "dst":    ["autogroup:self", "autogroup:tagged"],
+            "users":  ["autogroup:nonroot", "root"],
+            "action": "accept",
+        },
+        // tagged devices ssh into each other
+        {
+            "src":    ["autogroup:tagged"],
+            "dst":    ["autogroup:tagged"],
+            "users":  ["autogroup:nonroot", "root"],
+            "action": "accept",
+        },
+    ],
+
+    "tagOwners": {
+        // devices that communicate with each other via ros
+        "tag:ros-device": [],
+
+        // general purpose devices, this tag just allows you to ssh into it
+        "tag:general": [],
+    },
+
+    "tests": [
+        {
+            "src":    "group:it",
+            "accept": ["tag:general:22"],
+        },
+        {
+            "src":    "tag:general",
+            "accept": ["tag:general:22"],
+            "deny":   ["group:it:22"],
+        },
+    ],
+
+    "sshTests": [
+        {
+            "src":    "group:it",
+            "dst":    ["tag:general"],
+            "accept": ["cev", "root"],
+        },
+        {
+            "src":    "tag:general",
+            "dst":    ["tag:general"],
+            "accept": ["cev"],
+        },
+    ],
+}

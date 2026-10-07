@@ -1,0 +1,39 @@
+name: pi-image
+
+# checks the playbook, debian package names, the pinned image, and tailscale's installer
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/pi-image.yml
+      - pi-image/**
+  pull_request:
+    paths:
+      - .github/workflows/pi-image.yml
+      - pi-image/**
+
+permissions:
+  contents: read
+
+jobs:
+  pi-image:
+    runs-on: ubuntu-24.04-arm
+    container: debian:trixie
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: install tools
+        run: apt-get update && apt-get install -y --no-install-recommends ansible-core python3-apt curl
+
+      - name: check the playbook
+        run: ansible-playbook --syntax-check -i pi-image/ansible/inventory.ini pi-image/ansible/local.yml
+
+      - name: resolve packages
+        run: >-
+          ansible-playbook -c local -i pi-image/ansible/inventory.ini -i pi-image/ansible/ci.ini
+          -l ci --check --tags packages pi-image/ansible/local.yml
+
+      - name: check downloads
+        run: |
+          curl -fsIL "$(sed -n 's/^url=//p' pi-image/make-image.sh)"
+          curl -fsIL https://tailscale.com/install.sh

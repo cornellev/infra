@@ -1,0 +1,6 @@
+- name: install can packages
+  ansible.builtin.apt:
+    name: "{{ can_packages }}"
+    update_cache: true
+    lock_timeout: 600
+  tags: packages

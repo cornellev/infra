@@ -1,0 +1,27 @@
+base_packages:
+  - curl
+  - wget
+  - git
+  - tmux
+  - mosh
+  - vim
+  - neovim
+  - htop
+  - btop
+  - rsync
+  - avahi-daemon
+  - netcat-openbsd
+  - lsof
+  - ripgrep
+  - eza
+  - ncdu
+  - bind9-dnsutils
+  - jq
+  - zip
+  - unzip
+  - build-essential
+  - cmake
+  - ninja-build
+  - just
+  - usbutils
+  - unattended-upgrades

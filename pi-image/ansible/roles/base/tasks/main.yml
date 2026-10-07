@@ -1,0 +1,15 @@
+# finishes an install cut off by a power loss, a no-op otherwise
+- name: configure half-installed packages
+  ansible.builtin.command: dpkg --configure -a
+  changed_when: false
+
+- name: install packages
+  ansible.builtin.apt:
+    name: "{{ base_packages }}"
+    update_cache: true
+    lock_timeout: 600
+  tags: packages
+
+- name: turn on tailscale auto-update
+  ansible.builtin.command: tailscale set --auto-update
+  changed_when: false

@@ -1,0 +1,8 @@
+#!/bin/sh
+set -e
+if [ -e /etc/cev-sync-off ]; then
+    echo "sync off: /etc/cev-sync-off exists"
+    exit 0
+fi
+exec ansible-pull -U https://github.com/cornellev/infra -d /opt/cev-infra --clean \
+    -i pi-image/ansible/inventory.ini pi-image/ansible/local.yml

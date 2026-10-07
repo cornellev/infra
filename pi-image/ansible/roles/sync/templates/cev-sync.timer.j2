@@ -1,0 +1,9 @@
+[Unit]
+Description=Scheduled cornellev/infra sync
+
+[Timer]
+OnCalendar={{ sync_schedule }}
+Persistent=true
+
+[Install]
+WantedBy=timers.target
