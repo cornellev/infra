@@ -5,16 +5,10 @@
     },
 
     "grants": [
-        // members reach everything, including each other's devices and services
+        // every member and tagged device reaches every device and service
         {
-            "src": ["autogroup:member"],
+            "src": ["*"],
             "dst": ["*"],
-            "ip":  ["*"],
-        },
-        // tagged devices reach other tag:general devices and services, and exit nodes, never members' devices
-        {
-            "src": ["autogroup:tagged"],
-            "dst": ["tag:general", "autogroup:internet"],
             "ip":  ["*"],
         },
     ],
@@ -49,7 +43,6 @@
         {
             "src":    "tag:general",
             "accept": ["tag:general:22", "svc:cev-evil:80", "svc:cev-cat:80", "svc:cev-data:80"],
-            "deny":   ["group:it:22"],
         },
     ],
 
