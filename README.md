@@ -17,14 +17,16 @@ policy. Only the `apply` job, in an environment that deploys from `main` alone, 
 1. In GitHub, create the environment `tailscale-apply` and limit its deployment branches to
    `main`. Add a ruleset on `main` that requires a reviewed PR.
 2. In the Tailscale admin console, create two federated identities for this repo:
-   - test: scopes `policy_file:read`, `devices:core:read`, `devices:posture_attributes:read`,
-     subject matching this repo's pull requests
-   - apply: scopes `policy_file`, `devices:core:read`, `devices:posture_attributes`, subject
-     matching the `tailscale-apply` environment
-3. Add the test identity's client ID and audience as repo variables `TS_TEST_OAUTH_ID` and
-   `TS_TEST_AUDIENCE`. Add the apply identity's as `TS_OAUTH_ID` and `TS_AUDIENCE`, as variables
-   of the `tailscale-apply` environment. None is a credential: Tailscale only accepts a
-   GitHub-signed token from this repo.
+   - `infra gitops test`: scopes `policy_file:read`, `devices:core:read`,
+     `devices:posture_attributes:read`, subject `repo:cornellev/infra:pull_request`
+   - `infra gitops apply`: scopes `policy_file`, `devices:core:read`,
+     `devices:posture_attributes`, subject `repo:cornellev/infra:environment:tailscale-apply`
+3. Add repo variables (not secrets), using the names from Tailscale's GitOps docs:
+   `TS_TAILNET` (from the admin console's General settings page), and `TS_OAUTH_ID` and
+   `TS_AUDIENCE` from the test identity. In the `tailscale-apply` environment, add `TS_OAUTH_ID`
+   and `TS_AUDIENCE` again with the apply identity's values. Environment variables override repo
+   ones, so only the `apply` job gets the identity that can write. None is a credential:
+   Tailscale only accepts a GitHub-signed token from this repo.
 4. Turn on the admin console's warning that the policy is managed externally. Edits made there
    are overwritten on the next push to `main`.
 

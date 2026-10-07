@@ -5,16 +5,16 @@
     },
 
     "grants": [
-        // members reach their own devices, every tagged device, and exit nodes
+        // members reach everything, including each other's devices and services
         {
             "src": ["autogroup:member"],
-            "dst": ["autogroup:self", "autogroup:tagged", "autogroup:internet"],
+            "dst": ["*"],
             "ip":  ["*"],
         },
-        // tagged devices reach each other and exit nodes, never members' devices
+        // tagged devices reach other tag:general devices and services, and exit nodes, never members' devices
         {
             "src": ["autogroup:tagged"],
-            "dst": ["autogroup:tagged", "autogroup:internet"],
+            "dst": ["tag:general", "autogroup:internet"],
             "ip":  ["*"],
         },
     ],
@@ -37,9 +37,6 @@
     ],
 
     "tagOwners": {
-        // devices that communicate with each other via ros
-        "tag:ros-device": [],
-
         // general purpose devices, this tag just allows you to ssh into it
         "tag:general": [],
     },
@@ -51,7 +48,7 @@
         },
         {
             "src":    "tag:general",
-            "accept": ["tag:general:22"],
+            "accept": ["tag:general:22", "svc:cev-evil:80", "svc:cev-cat:80", "svc:cev-data:80"],
             "deny":   ["group:it:22"],
         },
     ],
