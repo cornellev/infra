@@ -16,11 +16,15 @@ policy. Only the `apply` job, in an environment that deploys from `main` alone, 
 
 1. In GitHub, create the environment `tailscale-apply` and limit its deployment branches to
    `main`. Add a ruleset on `main` that requires a reviewed PR.
-2. In the Tailscale admin console, create two federated identities for this repo:
+2. In the Tailscale admin console, create two federated identities for this repo. This repo uses
+   GitHub's immutable OIDC subject, which carries the org and repo IDs
+   (`gh api repos/cornellev/infra/actions/oidc/customization/sub` shows the prefix):
    - `infra gitops test`: scopes `policy_file:read`, `devices:core:read`,
-     `devices:posture_attributes:read`, subject `repo:cornellev/infra:pull_request`
+     `devices:posture_attributes:read`, subject
+     `repo:cornellev@157062924/infra@1409428931:pull_request`
    - `infra gitops apply`: scopes `policy_file`, `devices:core:read`,
-     `devices:posture_attributes`, subject `repo:cornellev/infra:environment:tailscale-apply`
+     `devices:posture_attributes`, subject
+     `repo:cornellev@157062924/infra@1409428931:environment:tailscale-apply`
 3. Add repo variables (not secrets), using the names from Tailscale's GitOps docs:
    `TS_TAILNET` (from the admin console's General settings page), and `TS_OAUTH_ID` and
    `TS_AUDIENCE` from the test identity. In the `tailscale-apply` environment, add `TS_OAUTH_ID`
