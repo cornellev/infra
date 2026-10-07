@@ -31,13 +31,14 @@ jobs:
         id: test-acl
         uses: tailscale/gitops-acl-action@v1
         with:
-          oauth-client-id: ${{ vars.TS_TEST_OAUTH_ID }}
-          audience: ${{ vars.TS_TEST_AUDIENCE }}
-          tailnet: cornellev.org.github
+          oauth-client-id: ${{ vars.TS_OAUTH_ID }}
+          audience: ${{ vars.TS_AUDIENCE }}
+          tailnet: ${{ vars.TS_TAILNET }}
           policy-file: tailscale/policy.hujson
           action: test
 
-  # the tailscale-apply environment only deploys from main and holds the identity that can write
+  # the tailscale-apply environment only deploys from main
+  # its TS_OAUTH_ID and TS_AUDIENCE override the repo ones with the identity that can write
   apply:
     if: github.event_name == 'push'
     environment: tailscale-apply
@@ -64,6 +65,6 @@ jobs:
         with:
           oauth-client-id: ${{ vars.TS_OAUTH_ID }}
           audience: ${{ vars.TS_AUDIENCE }}
-          tailnet: cornellev.org.github
+          tailnet: ${{ vars.TS_TAILNET }}
           policy-file: tailscale/policy.hujson
           action: apply
