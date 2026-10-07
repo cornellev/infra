@@ -4,13 +4,7 @@ name: pi-image
 on:
   push:
     branches: [main]
-    paths:
-      - .github/workflows/pi-image.yml
-      - pi-image/**
   pull_request:
-    paths:
-      - .github/workflows/pi-image.yml
-      - pi-image/**
 
 permissions:
   contents: read
