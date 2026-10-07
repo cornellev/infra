@@ -1,9 +1,4 @@
 {
-    "groups": {
-        // the current it lead, update at handoff
-        "group:it": ["erics118@github"],
-    },
-
     "grants": [
         // every member and tagged device reaches every device and service
         {
@@ -37,21 +32,12 @@
 
     "tests": [
         {
-            "src":    "group:it",
-            "accept": ["tag:general:22"],
-        },
-        {
             "src":    "tag:general",
             "accept": ["tag:general:22", "svc:cev-evil:80", "svc:cev-cat:80", "svc:cev-data:80"],
         },
     ],
 
     "sshTests": [
-        {
-            "src":    "group:it",
-            "dst":    ["tag:general"],
-            "accept": ["cev", "root"],
-        },
         {
             "src":    "tag:general",
             "dst":    ["tag:general"],
