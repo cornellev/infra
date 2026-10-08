@@ -3,6 +3,11 @@
   ansible.builtin.command: dpkg --configure -a
   changed_when: false
 
+# a power cut can leave package lists empty, and apt keeps an existing list without checking it
+- name: remove empty package lists
+  ansible.builtin.command: find /var/lib/apt/lists -maxdepth 1 -type f -size 0 ! -name lock -delete
+  changed_when: false
+
 - name: install packages
   ansible.builtin.apt:
     name: "{{ base_packages }}"
