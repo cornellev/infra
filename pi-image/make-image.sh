@@ -79,6 +79,8 @@ write_files:
       set -e
       [ ! -e /etc/cev-setup.env ] || . /etc/cev-setup.env
       export DEBIAN_FRONTEND=noninteractive
+      # a power cut can leave package lists empty, and apt keeps an existing list without checking it
+      find /var/lib/apt/lists -maxdepth 1 -type f -size 0 ! -name lock -delete
       command -v tailscale >/dev/null || curl -fsSL https://tailscale.com/install.sh | sh
       # a rerun of tailscale up fails once the sync playbook has changed a tailscale setting
       tailscale status >/dev/null 2>&1 ||
