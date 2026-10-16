@@ -27,7 +27,6 @@ that isn't there, and `cev-sync` fails on one. Groups in the same file set what 
 |---|---|
 | (every Pi) | role `base`: the packages in `roles/base/defaults/main.yml`, Tailscale auto-update, and `unattended-upgrades`, which applies Debian stable and security updates daily with no automatic reboot and skips the Raspberry Pi kernel and firmware |
 | | role `sync`: `cev-sync` and its timer, daily by default |
-| `can` | role `can`: the packages in `roles/can/defaults/main.yml` |
 | `weekly` | syncs weekly instead of daily (`group_vars/weekly.yml`) |
 | `frozen` | still pulls, but applies nothing except its sync timer, so moving it out of `frozen` unfreezes it |
 
