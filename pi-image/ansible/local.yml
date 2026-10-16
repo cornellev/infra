@@ -3,8 +3,3 @@
     - sync
     - role: base
       when: not sync_frozen
-
-- hosts: can
-  roles:
-    - role: can
-      when: not sync_frozen

@@ -24,4 +24,9 @@ base_packages:
   - ninja-build
   - just
   - usbutils
+  - can-utils
+  - python3-can
+  - python3-serial
+  - picocom
+  - i2c-tools
   - unattended-upgrades
