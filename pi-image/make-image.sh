@@ -37,6 +37,36 @@ q() { printf "'%s'" "${1//\'/\'\'}"; }
 
 out=build/$host
 mkdir -p "$out"
+locale=en_US.UTF-8
+
+env_wifi=
+if [ -n "${WIFI_SSID:-}" ]; then
+    env_wifi=$(
+        cat <<EOF
+  - path: $(q "/etc/NetworkManager/system-connections/$WIFI_SSID.nmconnection")
+    permissions: '0600'
+    content: |
+      [connection]
+      id=$WIFI_SSID
+      type=wifi
+      autoconnect-priority=1
+
+      [wifi]
+      ssid=$WIFI_SSID
+      mode=infrastructure
+
+      [wifi-security]
+      key-mgmt=wpa-psk
+      psk=${WIFI_PSK:?set WIFI_PSK in .env}
+
+      [ipv4]
+      method=auto
+
+      [ipv6]
+      method=ignore
+EOF
+    )
+fi
 
 cat >"$out/user-data" <<EOF
 #cloud-config
@@ -45,15 +75,13 @@ manage_resolv_conf: false
 hostname: $(q "$host")
 manage_etc_hosts: true
 
-apt:
-  preserve_sources_list: true
-  conf: |
-    Acquire {
-      Check-Date "false";
-    };
+# the locale module runs after the desktop starts, so the first session would keep the image's en_GB
+# bootcmd runs before the desktop
+bootcmd:
+  - [cloud-init-per, once, cev-locale, sh, -c, "echo '$locale UTF-8' >/etc/locale.gen && locale-gen && update-locale LANG=$locale"]
 
 timezone: America/New_York
-locale: en_US.UTF-8
+locale: $locale
 keyboard:
   model: pc105
   layout: us
@@ -81,6 +109,9 @@ write_files:
       export DEBIAN_FRONTEND=noninteractive
       # a power cut can leave package lists empty, and apt keeps an existing list without checking it
       find /var/lib/apt/lists -maxdepth 1 -type f -size 0 ! -name lock -delete
+      # a pi 4 boots with the image's date, and apt rejects every signature until the clock syncs
+      timeout 300 sh -c 'until [ "\$(timedatectl show -p NTPSynchronized --value)" = yes ]; do sleep 2; done' ||
+        { echo "clock not synced after 5 min" >&2; exit 1; }
       command -v tailscale >/dev/null || curl -fsSL https://tailscale.com/install.sh | sh
       # a rerun of tailscale up fails once the sync playbook has changed a tailscale setting
       tailscale status >/dev/null 2>&1 ||
@@ -121,42 +152,45 @@ $(sed 's/^/      /' ansible/roles/sync/files/cev-sync)
 
       [Install]
       WantedBy=multi-user.target
+  # wi-fi is networkmanager keyfiles, not netplan
+  # raspberry pi's networkmanager rewrites /etc/netplan on every start, and a power cut then can empty it
+  # see raspberrypi/trixie-feedback#99
+  - path: /etc/NetworkManager/system-connections/RedRover.nmconnection
+    permissions: '0600'
+    content: |
+      [connection]
+      id=RedRover
+      type=wifi
+
+      [wifi]
+      ssid=RedRover
+      mode=infrastructure
+
+      [ipv4]
+      method=auto
+
+      [ipv6]
+      method=ignore
+$env_wifi
 
 runcmd:
+  # networkmanager may have loaded its profiles before write_files ran
+  - [nmcli, connection, reload]
+  # sets the region and unblocks wi-fi, which the image ships blocked
+  - [raspi-config, nonint, do_wifi_country, US]
+  # a new file survives a power cut only once flushed
+  - [sync]
   - [systemctl, enable, --now, ssh]
   - [sh, -c, "echo 'cev ALL=(ALL) NOPASSWD:ALL' >/etc/sudoers.d/010_cev-nopasswd && chmod 0440 /etc/sudoers.d/010_cev-nopasswd"]
   - [systemctl, enable, --now, --no-block, cev-setup.service]
 EOF
 
-cat >"$out/network-config" <<EOF
-network:
-  version: 2
-  ethernets:
-    eth0:
-      dhcp4: true
-      dhcp6: true
-      optional: true
-  wifis:
-    wlan0:
-      dhcp4: true
-      regulatory-domain: "US"
-      access-points:
-        "RedRover":
-          auth:
-            key-management: none
-EOF
-if [ -n "${WIFI_SSID:-}" ]; then
-    cat >>"$out/network-config" <<EOF
-        $(q "$WIFI_SSID"):
-          password: $(q "${WIFI_PSK:?set WIFI_PSK in .env}")
-EOF
-fi
-echo "      optional: true" >>"$out/network-config"
-
 echo "instance-id: $id" >"$out/meta-data"
-printf '%s ds=nocloud;i=%s\n' "$(mtype -i "$fat" ::cmdline.txt | tr -d '\r\n')" "$id" >"$out/cmdline.txt"
+# network-config=disabled keeps cloud-init from writing netplan
+# networkmanager's default wired profile covers eth0
+printf '%s ds=nocloud;i=%s network-config=disabled\n' "$(mtype -i "$fat" ::cmdline.txt | tr -d '\r\n')" "$id" >"$out/cmdline.txt"
 
-for f in user-data network-config meta-data cmdline.txt; do
+for f in user-data meta-data cmdline.txt; do
     mcopy -o -i "$fat" "$out/$f" "::$f"
 done
 echo "wrote $img"

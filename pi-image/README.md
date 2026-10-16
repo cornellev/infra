@@ -5,7 +5,13 @@ On first boot cloud-init sets up:
 
 - hostname, `America/New_York`, `en_US.UTF-8`, US keyboard, US Wi-Fi region
 - user `cev` with the shared password, passwordless sudo, SSH password login on the LAN
-- Wi-Fi: `RedRover`, plus the optional network in `.env`. Ethernet works too.
+- Wi-Fi: `RedRover`, plus the optional network in `.env`, which wins when both are in range.
+  Both are NetworkManager keyfiles in `/etc/NetworkManager/system-connections/`, not netplan:
+  Raspberry Pi's NetworkManager deletes and rewrites `/etc/netplan` on every start, and a power cut
+  then can leave it empty
+  ([raspberrypi/trixie-feedback#99](https://github.com/raspberrypi/trixie-feedback/issues/99)).
+  cloud-init's network config is off, so the boot partition's `network-config` does nothing.
+  Ethernet works through NetworkManager's default wired profile.
 - `cev-setup.service`: installs Tailscale and joins the club tailnet as `tag:general` with
   Tailscale SSH (`tailscale ssh cev@<hostname>`), installs `ansible-core`, and runs `cev-sync`
   once. On failure it retries after 30 s, backing off to once a day. Once it succeeds, it turns off
