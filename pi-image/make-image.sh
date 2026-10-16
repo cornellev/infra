@@ -21,12 +21,12 @@ if [ ! -f build/base.img ]; then
         mv build/base.img.xz.part build/base.img.xz
     fi
     echo "$sha256  build/base.img.xz" | shasum -a 256 -c
-    xz -dc build/base.img.xz >build/base.img.tmp
+    xz -dcv build/base.img.xz >build/base.img.tmp
     mv build/base.img.tmp build/base.img
 fi
 
 img=build/$host.img
-cp build/base.img "$img"
+dd if=build/base.img of="$img" bs=4194304 status=progress
 # partition 1 (the fat boot partition) start lba sits at byte 454 of the mbr
 offset=$(($(od -An -t u4 -j 454 -N 4 "$img" | tr -d ' ') * 512))
 fat="$img@@$offset"

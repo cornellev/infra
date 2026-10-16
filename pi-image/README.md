@@ -51,7 +51,8 @@ sudo tailscale set --hostname=<name>          # the tailnet name
 ## Build
 
 Needs bash, curl, xz, mtools, and just (`brew install xz mtools just` or
-`apt install xz-utils mtools just`).
+`apt install xz-utils mtools just`). With nix, `nix develop` (or direnv) at the repo root provides
+them.
 
 ```sh
 cp .env.example .env    # then fill it in
